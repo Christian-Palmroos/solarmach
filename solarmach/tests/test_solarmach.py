@@ -24,6 +24,18 @@ from solarmach import (
 from solarmach.pfss_utilities import calculate_pfss_solution, get_gong_map
 
 
+"""
+Install dependencies for tests:
+pip install pytest pytest-doctestplus pytest-cov pytest-mpl
+
+To create/update the baseline images, run the following command from the base package dir:
+pytest --mpl-generate-path=solarmach/tests/baseline solarmach/tests/test_solarmach.py
+
+To run the tests locally, go to the base directory of the repository and run:
+pytest -ra --mpl --mpl-baseline-path=baseline --mpl-baseline-relative --mpl-generate-summary=html --mpl-results-path='tests_report/' .
+"""
+
+
 def test_print_body_list():
     df = print_body_list()
     assert isinstance(df, pd.core.frame.DataFrame)
