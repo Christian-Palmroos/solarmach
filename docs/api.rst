@@ -3,7 +3,7 @@ API reference
 #############
 
 .. automodule:: solarmach
-   :members: backmapping, backmapping_angle, car2sto_sun, get_sw_speed, print_body_list, sc_distance, solar_diff_rot, sto2car_sun
+   :members: backmapping, backmapping_angle, calculate_pfss_solution, car2sto_sun, get_gong_map, get_sw_speed, print_body_list, sc_distance, solar_diff_rot, sto2car_sun
    :undoc-members:
    :show-inheritance:
 

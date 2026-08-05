@@ -720,24 +720,34 @@ def construct_gongmap_filepath(timestr:str, directory:str, verbose:bool):
 
 def get_gong_map(time:str, filepath:str=None, autodownload:bool=True, tolerance:int=1, verbose:bool=True):
     """
-    A wrapper for functions load_gong_map() and download_gong_map().
-    Returns a gong map if one is found or autodownload is True. If no map found and
-    autodownload is False, then return None.
+    Returns a GONG map if one is found locally or if autodownload is True and a matching
+    map can be downloaded. Returns None if no map is found and autodownload is False.
 
     Parameters:
     -----------
-    timestr : {str}
-        A pandas-compatible timestring, e.g., '2010-11-29 12:45'
-    filepath : {str}, optional, default=None
-        The path to the gong map file with the name of the file, e.g., 'use/xyz/gong_maps/mrzqs211009t0814c2249_105.fits.gz'
-        If no filename at the end of filepath, search for the file from inside the given directory.
-        If no filepath provided, use the current directory.
-    autodownload : {bool}, optional, default=True
-        If file is not found, download it automatically.
-    tolerance : {int}, optional, default=1
-        In hours, the tolerance between the given timestamp and the timestamp of the gong map.
-    verbose : {bool}, optional, default=True
-        Enables print statements inside the functions.
+    time : str
+        A pandas-compatible timestring, e.g., '2010-11-29 12:45'.
+    filepath : str, optional, default=None
+        Accepted forms:
+          - Full path including filename ending in '.fits.gz', e.g.,
+            '/path/to/mrzqs211009t0814c2249_105.fits.gz'. Used directly.
+          - Directory path only. The expected filename is constructed from `time`
+            and the directory is searched for a matching file.
+          - None. The current working directory is used as the search directory.
+        In all cases, the resolved directory is also used as the download
+        destination if autodownload is triggered.
+    autodownload : bool, optional, default=True
+        If the file is not found locally, attempt to download it automatically.
+    tolerance : int, optional, default=1
+        Maximum allowed difference in hours between the requested timestamp and
+        the timestamp of the GONG map.
+    verbose : bool, optional, default=True
+        Enables print statements inside the called functions.
+
+    Returns:
+    --------
+    gong_map : object or None
+        The loaded GONG map, or None if no map was found and autodownload is False.
     """
 
     # Try to construct a complete filepath (including filename) from current working directory and given datetime.
