@@ -38,6 +38,9 @@ with pd.option_context('display.float_format', '{:0.2f}'.format):
     display(df)
 """
 
+_WARN  = "\033[1;31m"  # bold red
+_RESET = "\033[0m"
+
 # initialize the body dictionary
 body_dict = dict.fromkeys(['Earth', 'EARTH', 'earth', 399], [399, 'Earth', 'green'])
 body_dict.update(dict.fromkeys(['ACE', 'ace', 'Advanced Composition Explorer', -92], [-92, 'ACE', 'dimgrey']))
@@ -130,34 +133,57 @@ def get_sw_speed(body, dtime, trange=1, default_vsw=400.0, silent=False):
     except KeyError:
         pass
 
-    amda_tree = spz.inventories.data_tree.amda
-    cda_tree = spz.inventories.data_tree.cda
+    try:
+        amda_tree = spz.inventories.data_tree.amda
+        amda_available = True
+    except AttributeError:
+        amda_available = False
 
-    dataset = dict(ACE=cda_tree.ACE.SWE.AC_K1_SWE.Vp)  # https://cdaweb.gsfc.nasa.gov/misc/NotesA.html#AC_K1_SWE
-    dataset['SOHO'] = cda_tree.SOHO.CELIAS_PM.SOHO_CELIAS_PM_5MIN.V_p
-    dataset['Parker Solar Probe'] = amda_tree.Parameters.PSP.SWEAP_SPC.psp_spc_mom.psp_spc_vp_mom_nrm
-    dataset['Solar Orbiter'] = amda_tree.Parameters.SolarOrbiter.SWAPAS.L2.so_pas_momgr1.pas_momgr1_v_rtn_tot
-    dataset['STEREO A'] = amda_tree.Parameters.STEREO.STEREO_A.PLASTIC.sta_l2_pla.vpbulk_sta
-    dataset['STEREO B'] = amda_tree.Parameters.STEREO.STEREO_B.PLASTIC.stb_l2_pla.vpbulk_stb
-    dataset['Wind'] = amda_tree.Parameters.Wind.SWE.wnd_swe_kp.wnd_swe_vmag
+    try:
+        cda_tree = spz.inventories.data_tree.cda
+        cda_available = True
+    except AttributeError:
+        cda_available = False
 
-    # obsolete with useage of "df = df.iloc[:,0].resample('1h').mean()" below
-    # sw_key = dict(ACE='component_0')  # Solar Wind Bulk Speed [Vp]
-    # sw_key['Parker Solar Probe'] = '|vp_mom|'  # Velocity vector magnitude
-    # sw_key['SOHO'] = 'Proton V'  # Proton speed, scalar
-    # sw_key['Solar Orbiter'] = '|v_rtn|'  # Velocity magnitude in RTN frame
-    # sw_key['STEREO A'] = '|v|'  # Scalar magnitude of the velocity in km/s
-    # sw_key['STEREO B'] = '|v|'  # Scalar magnitude of the velocity in km/s
-    # sw_key['Wind'] = '|v|'  # |v|
+    dataset = {}
+    if cda_available:
+        dataset['ACE']  = cda_tree.ACE.SWE.AC_K1_SWE.Vp           # https://cdaweb.gsfc.nasa.gov/misc/NotesA.html#AC_K1_SWE
+        dataset['SOHO'] = cda_tree.SOHO.CELIAS_PM.SOHO_CELIAS_PM_5MIN.V_p
+    if amda_available:
+        dataset['Parker Solar Probe'] = amda_tree.Parameters.PSP.SWEAP_SPC.psp_spc_mom.psp_spc_vp_mom_nrm
+        dataset['Solar Orbiter']      = amda_tree.Parameters.SolarOrbiter.SWAPAS.L2.so_pas_momgr1.pas_momgr1_v_rtn_tot
+        dataset['STEREO A']           = amda_tree.Parameters.STEREO.STEREO_A.PLASTIC.sta_l2_pla.vpbulk_sta
+        dataset['STEREO B']           = amda_tree.Parameters.STEREO.STEREO_B.PLASTIC.stb_l2_pla.vpbulk_stb
+        dataset['Wind']               = amda_tree.Parameters.Wind.SWE.wnd_swe_kp.wnd_swe_vmag
 
+    cda_bodies  = ['ACE', 'SOHO']
+    amda_bodies = ['Parker Solar Probe', 'Solar Orbiter', 'STEREO A', 'STEREO B', 'Wind']
+
+    original_body = body
     if body in ['Earth', 'SEMB-L1']:
-        if not silent:
-            print(f"Using 'ACE' measurements for '{body}'.")
         body = 'ACE'
-    elif body not in dataset.keys():
-        if not silent:
-            print(f"Body '{body}' not supported, assuming default Vsw value of {default_vsw} km/s.")
-        return default_vsw
+
+    if body not in dataset:
+        if body in cda_bodies and not cda_available:
+            raise ConnectionError(
+                f"{_WARN}speasy's CDA server is currently unavailable. "
+                f"Cannot retrieve Vsw for '{original_body}'. "
+                f"Please provide solar wind speeds manually via the 'vsw_list' parameter.{_RESET}"
+            )
+        elif body in amda_bodies and not amda_available:
+            raise ConnectionError(
+                f"{_WARN}speasy's AMDA server is currently unavailable. "
+                f"Cannot retrieve Vsw for '{original_body}'. "
+                f"Please provide solar wind speeds manually via the 'vsw_list' parameter.{_RESET}"
+            )
+        else:
+            if not silent:
+                print(f"Body '{original_body}' not supported, "
+                      f"assuming default Vsw value of {default_vsw} km/s.")
+            return default_vsw
+
+    if original_body != body and not silent:
+        print(f"Using 'ACE' measurements for '{original_body}'.")
 
     try:
         dtime = parse_time(dtime).datetime  # dateutil.parser.parse(dtime)
@@ -171,7 +197,7 @@ def get_sw_speed(body, dtime, trange=1, default_vsw=400.0, silent=False):
         elif dataset[body].spz_provider() == 'cda':
             df = spz.get_data(dataset[body], dtime-dt.timedelta(hours=trange), dtime+dt.timedelta(hours=trange)).replace_fillval_by_nan().to_dataframe()
         # OLD: df = df[sw_key[body]].resample('1h').mean()
-        # This approach only takes the left-most column. All dataframe contain only a single column as of now. Be careful if this changes or new datasets are added!
+        # This approach only takes the left-most column. All dataframes contain only a single column as of now. Be careful if this changes or new datasets are added!
         df = df.iloc[:, 0].resample('1h').mean()
         # drop NaN entries:
         df.dropna(inplace=True)
