@@ -305,8 +305,8 @@ def trace_field_line(lon0, lat0, hmimap, seedheight, rad=True):
     Traces a single open magnetic field line at coordinates (lon0,lat0) on the pfss down
     to the photosphere
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     lon0, lat0: float
             Longitude and latitude of the seedpoint
     hmimap: hmimap-object
@@ -316,8 +316,8 @@ def trace_field_line(lon0, lat0, hmimap, seedheight, rad=True):
     rad: bool, (default True)
             Wether or not input coordinates are in radians. If False, consider them degrees
 
-    Returns:
-    --------
+    Returns
+    -------
     field_lines: FieldLine or list[FieldLine]
             A FieldLine object, or a list of them, if input coordinates were a list
 
@@ -557,8 +557,8 @@ def calculate_pfss_solution(gong_map, rss, coord_sys, nrho=35):
     """
     Calculates a Potential Field Source Surface (PFSS) solution based on a GONG map and parameters.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     gong_map : {sunpy.map.Map}
         GONG map in Carrington or Stonyhurst coordinates, obtained with get_gong_map()
     rss : {float}
@@ -568,8 +568,8 @@ def calculate_pfss_solution(gong_map, rss, coord_sys, nrho=35):
     nrho : {float/int, optional}
         rho = ln(r) -> nrho is the amount of points in this logarithmic range. Default is 35.
 
-    Returns:
-    ----------
+    Returns
+    -------
     pfss_solution : {pfsspy.Output}
         The PFSS solution that can be used to plot magnetic field lines under the source surface
     """
@@ -624,8 +624,8 @@ def download_gong_map(timestr:str, tolerance:int, filepath:str, verbose:bool):
     """
     Gets the download link for a GONG synoptic map
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     timestr : {str}
             String representation of the date and time, e.g., '2025-02-13 12:00'
 
@@ -668,8 +668,8 @@ def construct_gongmap_filepath(timestr:str, directory:str, verbose:bool):
     """
     Constructs a default filepath
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     timestr : {str}
         The datetime string, e.g., '2025-09-16'
 
@@ -679,8 +679,8 @@ def construct_gongmap_filepath(timestr:str, directory:str, verbose:bool):
     verbose : {bool}
         Prints mid-step information.
 
-    Returns:
-    --------
+    Returns
+    -------
     filepath : {str, None}
         The path to the file, including the name of the file. 
         If file not found, returns None.
@@ -723,8 +723,8 @@ def get_gong_map(time:str, filepath:str=None, autodownload:bool=True, tolerance:
     Returns a GONG map if one is found locally or if autodownload is True and a matching
     map can be downloaded. Returns None if no map is found and autodownload is False.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     time : str
         A pandas-compatible timestring, e.g., '2010-11-29 12:45'.
     filepath : str, optional, default=None
@@ -744,8 +744,8 @@ def get_gong_map(time:str, filepath:str=None, autodownload:bool=True, tolerance:
     verbose : bool, optional, default=True
         Enables print statements inside the called functions.
 
-    Returns:
-    --------
+    Returns
+    -------
     gong_map : object or None
         The loaded GONG map, or None if no map was found and autodownload is False.
     """
