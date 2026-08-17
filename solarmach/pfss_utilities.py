@@ -620,7 +620,7 @@ def load_gong_map(filepath:str):
     return sunpy.map.Map(filepath)
 
 
-def download_gong_map(timestr:str, tolerance:int, filepath:str, verbose:bool):
+def download_gong_map(timestr: str, tolerance: int, filepath: str, verbose: bool):
     """
     Gets the download link for a GONG synoptic map
 
@@ -652,12 +652,15 @@ def download_gong_map(timestr:str, tolerance:int, filepath:str, verbose:bool):
     search_results = Fido.search(attrs.Time(desired_time, desired_time_plus_hours), attrs.Instrument("GONG"))
     if verbose:
         print(search_results)
+    
+    # Handle search errors
     try:
         if getattr(search_results, "errors", None):
-            print(search_results.errors)
+            formatted = _format_errors(search_results.errors)
+            print(f"GONG search errors:\n{formatted}")
             try:
                 import streamlit as st
-                st.error(f"GONG search errors: {search_results.errors}")
+                st.error(f"GONG search errors:\n{formatted}")
             except ImportError:
                 pass
     except AttributeError:
@@ -669,19 +672,25 @@ def download_gong_map(timestr:str, tolerance:int, filepath:str, verbose:bool):
     if search_results.file_num > 1:
         search_results = search_results[0][0]
     elif search_results.file_num == 0:
-        print(f"No GONG maps found online for the given time range: {desired_time} to {desired_time_plus_hours}.")
+        msg = (f"No GONG maps found online for the given time range: {desired_time} to {desired_time_plus_hours}.")
+        print(msg)
         try:
             import streamlit as st
-            st.error(f"No GONG maps found online for the given time range: {desired_time} to {desired_time_plus_hours}.")
+            st.error(msg)
         except ImportError:
             pass
+        return None
+
     file = Fido.fetch(search_results, path=filepath)
+
+    # Handle fetch errors
     try:
         if getattr(file, "errors", None):
-            print(file.errors)
+            formatted = _format_errors(file.errors)
+            print(f"GONG download errors:\n{formatted}")
             try:
                 import streamlit as st
-                st.error(f"GONG download errors: {file.errors}")
+                st.error(f"GONG download errors:\n{formatted}")
             except ImportError:
                 pass
     except AttributeError:
@@ -803,3 +812,10 @@ def get_gong_map(time:str, filepath:str=None, autodownload:bool=True, tolerance:
             print("Automatic downloading not enabled, no GONG map obtained.")
 
     return gong_map
+
+def _format_errors(errors):
+    """Convert an errors list or object into a human-readable string."""
+    if isinstance(errors, (list, tuple)):
+        # Join each item as string, separated by newlines or commas
+        return "\n".join(str(e) for e in errors)
+    return str(errors)
