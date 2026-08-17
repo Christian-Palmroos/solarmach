@@ -652,18 +652,40 @@ def download_gong_map(timestr:str, tolerance:int, filepath:str, verbose:bool):
     search_results = Fido.search(attrs.Time(desired_time, desired_time_plus_hours), attrs.Instrument("GONG"))
     if verbose:
         print(search_results)
+    try:
+        if getattr(search_results, "errors", None):
+            print(search_results.errors)
+            try:
+                import streamlit as st
+                st.error(f"GONG search errors: {search_results.errors}")
+            except ImportError:
+                pass
+    except AttributeError:
+        pass
 
     # result is a type of sunpy.net.fido_factory.UnifiedResponse, which is similar to a pd.DataFrame.
     # It contains the queries for the given time period of existing gong maps that can be downloaded.
     # All of the listed files will be downloaded, but that's undesired, so choose only the first entry
     if search_results.file_num > 1:
         search_results = search_results[0][0]
-    file = Fido.fetch(search_results, path=filepath)
-    if verbose:
+    elif search_results.file_num == 0:
+        print(f"No GONG maps found online for the given time range: {desired_time} to {desired_time_plus_hours}.")
         try:
-            print(file.errors)
-        except AttributeError:
+            import streamlit as st
+            st.error(f"No GONG maps found online for the given time range: {desired_time} to {desired_time_plus_hours}.")
+        except ImportError:
             pass
+    file = Fido.fetch(search_results, path=filepath)
+    try:
+        if getattr(file, "errors", None):
+            print(file.errors)
+            try:
+                import streamlit as st
+                st.error(f"GONG download errors: {file.errors}")
+            except ImportError:
+                pass
+    except AttributeError:
+        pass
 
     if verbose:
         print(f"Downloaded GONG map to {file.data[0]}")
