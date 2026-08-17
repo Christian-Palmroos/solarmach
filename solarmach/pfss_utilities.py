@@ -679,7 +679,6 @@ def download_gong_map(timestr: str, tolerance: int, filepath: str, verbose: bool
             st.error(msg)
         except ImportError:
             pass
-        return None
 
     file = Fido.fetch(search_results, path=filepath)
 
