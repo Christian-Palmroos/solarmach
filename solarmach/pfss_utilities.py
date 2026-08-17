@@ -650,6 +650,8 @@ def download_gong_map(timestr:str, tolerance:int, filepath:str, verbose:bool):
     desired_time_plus_hours = desired_time + pd.Timedelta(hours=tolerance)
 
     search_results = Fido.search(attrs.Time(desired_time, desired_time_plus_hours), attrs.Instrument("GONG"))
+    if verbose:
+        print(search_results)
 
     # result is a type of sunpy.net.fido_factory.UnifiedResponse, which is similar to a pd.DataFrame.
     # It contains the queries for the given time period of existing gong maps that can be downloaded.
@@ -657,6 +659,11 @@ def download_gong_map(timestr:str, tolerance:int, filepath:str, verbose:bool):
     if search_results.file_num > 1:
         search_results = search_results[0][0]
     file = Fido.fetch(search_results, path=filepath)
+    if verbose:
+        try:
+            print(file.errors)
+        except AttributeError:
+            pass
 
     if verbose:
         print(f"Downloaded GONG map to {file.data[0]}")
